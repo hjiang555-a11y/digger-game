@@ -1279,7 +1279,7 @@ class Game {
     }
 
     _playerDeath() {
-        if (this.state !== 'playing' || this.player.respawning) return;
+        if (this.player.respawning) return;
         this.particles.emitDeath(this.player.x, this.player.y);
         this.screenShake = 0.35;
         this.audio.sfxDeath();
