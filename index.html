@@ -124,6 +124,7 @@ const BEZEL_S = 7;                       // Bezel size
 const CANVAS_W = GAME_W + BEZEL_S * 2;
 const CANVAS_H = GAME_H + SCORE_H + BEZEL_S * 2;
 const RESPAWN_INVINCIBILITY = 2.5;
+const RESIZE_SETTLE_DELAY = 250;
 
 const TILE = {
     WALL: 0, DIRT: 1, EMPTY: 2, GOLD: 3,
@@ -156,7 +157,7 @@ canvas.width = CANVAS_W;
 canvas.height = CANVAS_H;
 
 let scaleX = 1, scaleY = 1;
-let resizeRaf = 0;
+let resizeAnimationFrameId = 0;
 let resizeSettleTimer = 0;
 
 function resizeCanvas() {
@@ -178,16 +179,16 @@ function resizeCanvas() {
     scaleY = h / CANVAS_H;
 }
 function scheduleResize() {
-    if (!resizeRaf) {
-        resizeRaf = requestAnimationFrame(() => {
-            resizeRaf = 0;
+    if (!resizeAnimationFrameId) {
+        resizeAnimationFrameId = requestAnimationFrame(() => {
+            resizeAnimationFrameId = 0;
             resizeCanvas();
         });
     }
     clearTimeout(resizeSettleTimer);
     resizeSettleTimer = setTimeout(() => {
         resizeCanvas();
-    }, 250);
+    }, RESIZE_SETTLE_DELAY);
 }
 window.addEventListener('resize', scheduleResize);
 window.addEventListener('orientationchange', scheduleResize);
