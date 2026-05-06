@@ -157,7 +157,6 @@ canvas.width = CANVAS_W;
 canvas.height = CANVAS_H;
 
 let scaleX = 1, scaleY = 1;
-let resizeAnimationFrameId = 0;
 let resizeSettleTimer = 0;
 
 function resizeCanvas() {
@@ -179,16 +178,8 @@ function resizeCanvas() {
     scaleY = h / CANVAS_H;
 }
 function scheduleResize() {
-    if (!resizeAnimationFrameId) {
-        resizeAnimationFrameId = requestAnimationFrame(() => {
-            resizeAnimationFrameId = 0;
-            resizeCanvas();
-        });
-    }
     clearTimeout(resizeSettleTimer);
-    resizeSettleTimer = setTimeout(() => {
-        resizeCanvas();
-    }, RESIZE_SETTLE_DELAY);
+    resizeSettleTimer = setTimeout(resizeCanvas, RESIZE_SETTLE_DELAY);
 }
 window.addEventListener('resize', scheduleResize);
 window.addEventListener('orientationchange', scheduleResize);
