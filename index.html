@@ -12,6 +12,7 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    min-height: 100dvh;
     font-family: 'Courier New', monospace;
     overflow: hidden;
     user-select: none;
@@ -33,6 +34,7 @@ body {
     display: block;
     background: #0a0a0a;
     border-radius: 2px;
+    touch-action: none;
 }
 #name-overlay {
     display: none;
@@ -121,6 +123,10 @@ const SCORE_H = 34;                      // Score bar height
 const BEZEL_S = 7;                       // Bezel size
 const CANVAS_W = GAME_W + BEZEL_S * 2;
 const CANVAS_H = GAME_H + SCORE_H + BEZEL_S * 2;
+const RESPAWN_INVINCIBILITY = 2.5;
+const RESIZE_SETTLE_DELAY = 250;
+const VIEWPORT_MARGIN = 48;
+const MIN_VIEWPORT_SIZE = 160;
 
 const TILE = {
     WALL: 0, DIRT: 1, EMPTY: 2, GOLD: 3,
@@ -153,10 +159,14 @@ canvas.width = CANVAS_W;
 canvas.height = CANVAS_H;
 
 let scaleX = 1, scaleY = 1;
+let resizeSettleTimer = 0;
 
 function resizeCanvas() {
-    const availW = window.innerWidth - 48;
-    const availH = window.innerHeight - 48;
+    const viewport = window.visualViewport || window;
+    const viewportW = viewport.width || window.innerWidth;
+    const viewportH = viewport.height || window.innerHeight;
+    const availW = Math.max(MIN_VIEWPORT_SIZE, viewportW - VIEWPORT_MARGIN);
+    const availH = Math.max(MIN_VIEWPORT_SIZE, viewportH - VIEWPORT_MARGIN);
     const pad = 16;
     const maxW = availW - pad * 2;
     const maxH = availH - pad * 2;
@@ -169,7 +179,15 @@ function resizeCanvas() {
     scaleX = w / CANVAS_W;
     scaleY = h / CANVAS_H;
 }
-window.addEventListener('resize', resizeCanvas);
+function scheduleResize() {
+    clearTimeout(resizeSettleTimer);
+    resizeSettleTimer = setTimeout(resizeCanvas, RESIZE_SETTLE_DELAY);
+}
+window.addEventListener('resize', scheduleResize);
+window.addEventListener('orientationchange', scheduleResize);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', scheduleResize);
+if (screen.orientation) screen.orientation.addEventListener('change', scheduleResize);
+window.addEventListener('pagehide', () => clearTimeout(resizeSettleTimer));
 
 // ======================== PALETTE ===========================
 const C = {
@@ -589,7 +607,7 @@ class Player {
         this.dir = { x: 0, y: 0 };
         this.nextDir = { x: 0, y: 0 };
         this.moving = false;
-        this.invincible = 2.5;
+        this.invincible = RESPAWN_INVINCIBILITY;
         this.respawning = false;
     }
 
@@ -1252,6 +1270,7 @@ class Game {
     }
 
     _playerDeath() {
+        if (this.player.respawning) return;
         this.particles.emitDeath(this.player.x, this.player.y);
         this.screenShake = 0.35;
         this.audio.sfxDeath();
