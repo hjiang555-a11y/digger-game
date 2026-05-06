@@ -123,6 +123,7 @@ const SCORE_H = 34;                      // Score bar height
 const BEZEL_S = 7;                       // Bezel size
 const CANVAS_W = GAME_W + BEZEL_S * 2;
 const CANVAS_H = GAME_H + SCORE_H + BEZEL_S * 2;
+const RESPAWN_INVINCIBILITY = 2.5;
 
 const TILE = {
     WALL: 0, DIRT: 1, EMPTY: 2, GOLD: 3,
@@ -184,7 +185,13 @@ function scheduleResize() {
         });
     }
     clearTimeout(resizeSettleTimer);
-    resizeSettleTimer = setTimeout(resizeCanvas, 250);
+    resizeSettleTimer = setTimeout(() => {
+        if (resizeRaf) {
+            cancelAnimationFrame(resizeRaf);
+            resizeRaf = 0;
+        }
+        resizeCanvas();
+    }, 250);
 }
 window.addEventListener('resize', scheduleResize);
 window.addEventListener('orientationchange', scheduleResize);
@@ -609,7 +616,7 @@ class Player {
         this.dir = { x: 0, y: 0 };
         this.nextDir = { x: 0, y: 0 };
         this.moving = false;
-        this.invincible = 2.5;
+        this.invincible = RESPAWN_INVINCIBILITY;
         this.respawning = false;
     }
 
@@ -1281,7 +1288,7 @@ class Game {
             this._onGameOver();
         } else {
             this.player.respawning = true;
-            this.player.invincible = 2.5;
+            this.player.invincible = RESPAWN_INVINCIBILITY;
             setTimeout(() => {
                 if (this.player) this.player.reset(this.level.playerSpawn.x, this.level.playerSpawn.y);
             }, 900);
