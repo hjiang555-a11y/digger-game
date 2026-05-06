@@ -125,6 +125,8 @@ const CANVAS_W = GAME_W + BEZEL_S * 2;
 const CANVAS_H = GAME_H + SCORE_H + BEZEL_S * 2;
 const RESPAWN_INVINCIBILITY = 2.5;
 const RESIZE_SETTLE_DELAY = 250;
+const VIEWPORT_MARGIN = 48;
+const MIN_VIEWPORT_SIZE = 160;
 
 const TILE = {
     WALL: 0, DIRT: 1, EMPTY: 2, GOLD: 3,
@@ -163,8 +165,8 @@ function resizeCanvas() {
     const viewport = window.visualViewport || window;
     const viewportW = viewport.width || window.innerWidth;
     const viewportH = viewport.height || window.innerHeight;
-    const availW = Math.max(160, viewportW - 48);
-    const availH = Math.max(160, viewportH - 48);
+    const availW = Math.max(MIN_VIEWPORT_SIZE, viewportW - VIEWPORT_MARGIN);
+    const availH = Math.max(MIN_VIEWPORT_SIZE, viewportH - VIEWPORT_MARGIN);
     const pad = 16;
     const maxW = availW - pad * 2;
     const maxH = availH - pad * 2;
@@ -185,6 +187,7 @@ window.addEventListener('resize', scheduleResize);
 window.addEventListener('orientationchange', scheduleResize);
 if (window.visualViewport) window.visualViewport.addEventListener('resize', scheduleResize);
 if (screen.orientation) screen.orientation.addEventListener('change', scheduleResize);
+window.addEventListener('pagehide', () => clearTimeout(resizeSettleTimer));
 
 // ======================== PALETTE ===========================
 const C = {
