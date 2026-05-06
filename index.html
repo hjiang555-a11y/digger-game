@@ -12,6 +12,7 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    min-height: 100dvh;
     font-family: 'Courier New', monospace;
     overflow: hidden;
     user-select: none;
@@ -33,6 +34,7 @@ body {
     display: block;
     background: #0a0a0a;
     border-radius: 2px;
+    touch-action: none;
 }
 #name-overlay {
     display: none;
@@ -155,8 +157,11 @@ canvas.height = CANVAS_H;
 let scaleX = 1, scaleY = 1;
 
 function resizeCanvas() {
-    const availW = window.innerWidth - 48;
-    const availH = window.innerHeight - 48;
+    const viewport = window.visualViewport || window;
+    const viewportW = viewport.width || window.innerWidth;
+    const viewportH = viewport.height || window.innerHeight;
+    const availW = Math.max(160, viewportW - 48);
+    const availH = Math.max(160, viewportH - 48);
     const pad = 16;
     const maxW = availW - pad * 2;
     const maxH = availH - pad * 2;
@@ -169,7 +174,15 @@ function resizeCanvas() {
     scaleX = w / CANVAS_W;
     scaleY = h / CANVAS_H;
 }
-window.addEventListener('resize', resizeCanvas);
+function scheduleResize() {
+    resizeCanvas();
+    requestAnimationFrame(resizeCanvas);
+    setTimeout(resizeCanvas, 250);
+}
+window.addEventListener('resize', scheduleResize);
+window.addEventListener('orientationchange', scheduleResize);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', scheduleResize);
+if (screen.orientation) screen.orientation.addEventListener('change', scheduleResize);
 
 // ======================== PALETTE ===========================
 const C = {
@@ -1252,6 +1265,7 @@ class Game {
     }
 
     _playerDeath() {
+        if (this.state !== 'playing' || this.player.respawning) return;
         this.particles.emitDeath(this.player.x, this.player.y);
         this.screenShake = 0.35;
         this.audio.sfxDeath();
@@ -1260,6 +1274,7 @@ class Game {
             this._onGameOver();
         } else {
             this.player.respawning = true;
+            this.player.invincible = 2.5;
             setTimeout(() => {
                 if (this.player) this.player.reset(this.level.playerSpawn.x, this.level.playerSpawn.y);
             }, 900);
