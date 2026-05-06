@@ -186,10 +186,6 @@ function scheduleResize() {
     }
     clearTimeout(resizeSettleTimer);
     resizeSettleTimer = setTimeout(() => {
-        if (resizeRaf) {
-            cancelAnimationFrame(resizeRaf);
-            resizeRaf = 0;
-        }
         resizeCanvas();
     }, 250);
 }
@@ -1288,7 +1284,6 @@ class Game {
             this._onGameOver();
         } else {
             this.player.respawning = true;
-            this.player.invincible = RESPAWN_INVINCIBILITY;
             setTimeout(() => {
                 if (this.player) this.player.reset(this.level.playerSpawn.x, this.level.playerSpawn.y);
             }, 900);
